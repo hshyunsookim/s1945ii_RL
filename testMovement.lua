@@ -94,8 +94,6 @@ function main()
   getMissile()
   moveLR()
   drawBox_1P()
-
-
 end
 
 emu.sethook(main, "frame")
