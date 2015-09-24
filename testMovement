@@ -1,0 +1,5 @@
+
+mem = manager:machine().devices[":maincpu"].spaces["program"]
+
+function
+mem:write_i8(0x060103a5, 0xD5)
