@@ -5,13 +5,16 @@ ylocadr = 0x060103a9
 xveladr = 0x060103ad
 
 keyboardadr = 0x060103F5
-dir = 1
-keydir = "left"
 
+objadr = 0x06015f6a
+missileadr = 0x06016f78
+dir = 1
+
+ms_old_list = {}
 
 function cheat()
 -- set P1 invincible
-    mem:write_u8(0x60103FA, 1);
+    mem:write_u8(0x060103FA, 1);
 end
 
 function update_p1()
@@ -23,9 +26,47 @@ function getState()
   xloc = mem:read_u8(xlocadr)
   yloc = mem:read_u8(ylocadr)
   xvel = mem:read_u8(xveladr)
-  -- yvel = 
-  keypress = mem:read_u8(keyboardadr)
+  -- yvel =
   --print(keypress)
+end
+
+function getObject()
+  adr = objadr
+  objid = mem:read_u16(adr)
+  objid_old_list = {}
+  while (objid ~= 0) and (objid_old_list[objid]~=true) do
+    objxloc = mem:read_u8(adr+0x00000003)
+    objyloc = mem:read_u16(adr+0x00000004)
+    objw = mem:read_u16(adr+0x00000006)
+    objh = mem:read_u16(adr+0x00000008)
+
+    scr:draw_box(objyloc, objxloc, objyloc+objh, objxloc+objw,0, 0xff00ffff)
+    adr = adr + 0x00000010
+
+    objid_old_list[objid] = true
+    objid = mem:read_u16(adr)
+  end
+end
+
+function getMissile()
+  adr = missileadr
+  msdata = mem:read_u64(adr)
+
+  while (msid ~= 0) and (ms_old_list[msdata]~=true) do
+  --while (msid ~= 0) do
+
+    msxloc = mem:read_u8(adr+0x00000005)
+    msyloc = mem:read_u16(adr+0x00000006)
+
+    --print(msdata)
+    --print(msxloc, " ", msyloc, " ", msxloc+5, " ", msyloc+5)
+
+    scr:draw_box(msyloc, msxloc, msyloc+5, msxloc+5, 0, 0xff223300)
+    adr = adr + 0x00000010
+
+    ms_old_list[msdata] = true
+    msdata = mem:read_u64(adr)
+  end
 end
 
 function drawBox_1P()
@@ -46,44 +87,15 @@ function moveLR()
   move(dir,3)
 end
 
-function keyPress(key)
-  if key == "left" then
-    val = 16
-  elseif key == "right" then
-    val = 32
-  elseif key == "down" then
-    val = 64
-  elseif key == "up" then
-    val = 128
-  end
-  mem:write_u8(keyboardadr, val)
-end
-
-function moveKeyPress()
-  if xloc >= 213 then
-    keydir = "left"
-  elseif xloc <= 10 then
-    keydir = "right"
-  end
-  keyPress(keydir)  
-end
-
-
-function testKeyboard()
-  keypress(0x26)
-end
-
-
 function main()
   cheat()
   getState()
-
-
-  --moveLR()
-  --moveKeyPress()
+  getObject()
+  getMissile()
+  moveLR()
   drawBox_1P()
 
-  --testKeyboard()
+
 end
 
 emu.sethook(main, "frame")
